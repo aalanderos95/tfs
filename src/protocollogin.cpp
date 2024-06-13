@@ -52,7 +52,6 @@ void ProtocolLogin::getCharacterList(const std::string& accountName, const std::
 	}
 
 	//Update premium days
-	Game::updatePremium(account);
 	addWorldInfo(output, accountName, password, version);
 }
 
