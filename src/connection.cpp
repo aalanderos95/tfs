@@ -271,28 +271,25 @@ uint32_t Connection::getIP()
 }
 
 
-void Connection::dispatchBroadcastMessage(const OutputMessage_ptr& msg)
-{
-	auto msgCopy = OutputMessagePool::getOutputMessage();
-	msgCopy->append(msg);
-	socket.get_executor().context().dispatch(std::bind(&Connection::broadcastMessage, shared_from_this(), msgCopy));
-
+void Connection::dispatchBroadcastMessage(const OutputMessage_ptr& msg) {
+    auto msgCopy = OutputMessagePool::getOutputMessage();
+    msgCopy->append(msg);
+    boost::asio::post(socket.get_executor(), std::bind(&Connection::broadcastMessage, shared_from_this(), msgCopy));
 }
 
-void Connection::broadcastMessage(OutputMessage_ptr msg)
-{
-	std::lock_guard<std::recursive_mutex> lockClass(connectionLock);
-	const auto client = std::dynamic_pointer_cast<ProtocolGame>(protocol);
-	if (client) {
-		std::lock_guard<decltype(client->liveCastLock)> lockGuard(client->liveCastLock);
+void Connection::broadcastMessage(OutputMessage_ptr msg) {
+    std::lock_guard<std::recursive_mutex> lockClass(connectionLock);
+    const auto client = std::dynamic_pointer_cast<ProtocolGame>(protocol);
+    if (client) {
+        std::lock_guard<decltype(client->liveCastLock)> lockGuard(client->liveCastLock);
 
-		const auto& spectators = client->getLiveCastSpectators();
-		for (const ProtocolSpectator_ptr& spectator : spectators) {
-			auto newMsg = OutputMessagePool::getOutputMessage();
-			newMsg->append(msg);
-			spectator->send(std::move(newMsg));
-		}
-	}
+        const auto& spectators = client->getLiveCastSpectators();
+        for (const ProtocolSpectator_ptr& spectator : spectators) {
+            auto newMsg = OutputMessagePool::getOutputMessage();
+            newMsg->append(msg);
+            spectator->send(std::move(newMsg));
+        }
+    }
 }
 
 void Connection::onWriteOperation(const boost::system::error_code& error)
