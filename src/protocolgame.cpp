@@ -2184,7 +2184,7 @@ void ProtocolGame::sendUpdateTileCreature(const Position& pos, uint32_t stackpos
 
 	bool known;
 	uint32_t removedKnown;
-	checkCreatureAsKnown(creature->getID(), known, removedKnown);
+	ProtocolGameBase::checkCreatureAsKnown(creature->getID(), known, removedKnown);
 	AddCreature(msg, creature, false, removedKnown);
 
 	writeToOutputBuffer(msg);
