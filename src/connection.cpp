@@ -241,6 +241,7 @@ void Connection::internalSend(const OutputMessage_ptr& msg)
 		dispatchBroadcastMessage(msg);
 	}
 	protocol->onSendMessage(msg);
+	
 	try {
 		writeTimer.expires_from_now(std::chrono::seconds(CONNECTION_WRITE_TIMEOUT));
 		writeTimer.async_wait(std::bind(&Connection::handleTimeout, std::weak_ptr<Connection>(shared_from_this()),
@@ -254,6 +255,21 @@ void Connection::internalSend(const OutputMessage_ptr& msg)
 		close(FORCE_CLOSE);
 	}
 }
+
+uint32_t Connection::getIP()
+{
+	std::lock_guard<std::recursive_mutex> lockClass(connectionLock);
+
+	// IP-address is expressed in network byte order
+	boost::system::error_code error;
+	const boost::asio::ip::tcp::endpoint endpoint = socket.remote_endpoint(error);
+	if (error) {
+		return 0;
+	}
+
+	return htonl(endpoint.address().to_v4().to_ulong());
+}
+
 
 void Connection::dispatchBroadcastMessage(const OutputMessage_ptr& msg)
 {
@@ -276,20 +292,6 @@ void Connection::broadcastMessage(OutputMessage_ptr msg)
 			spectator->send(std::move(newMsg));
 		}
 	}
-}
-
-uint32_t Connection::getIP()
-{
-	std::lock_guard<std::recursive_mutex> lockClass(connectionLock);
-
-	// IP-address is expressed in network byte order
-	boost::system::error_code error;
-	const boost::asio::ip::tcp::endpoint endpoint = socket.remote_endpoint(error);
-	if (error) {
-		return 0;
-	}
-
-	return htonl(endpoint.address().to_v4().to_ulong());
 }
 
 void Connection::onWriteOperation(const boost::system::error_code& error)

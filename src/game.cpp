@@ -3419,6 +3419,8 @@ void Game::playerSay(uint32_t playerId, uint16_t channelId, SpeakClasses type,
 		return;
 	}
 
+	
+
 	player->resetIdleTime();
 
 	if (playerSaySpell(player, type, text)) {
@@ -3441,6 +3443,11 @@ void Game::playerSay(uint32_t playerId, uint16_t channelId, SpeakClasses type,
 	}
 
 	player->removeMessageBuffer();
+
+	if (channelId == CHANNEL_CAST) {
+		player->sendChannelMessage(player->getName(), text, TALKTYPE_CHANNEL_R1, channelId);
+	}
+
 
 	switch (type) {
 		case TALKTYPE_SAY:
