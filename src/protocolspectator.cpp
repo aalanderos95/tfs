@@ -16,6 +16,7 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+#include <array>
 
 #include "otpch.h"
 
@@ -79,7 +80,10 @@ void ProtocolSpectator::onRecvFirstMessage(NetworkMessage& msg)
 	key[2] = msg.get<uint32_t>();
 	key[3] = msg.get<uint32_t>();
 	enableXTEAEncryption();
-	setXTEAKey(key);
+
+	std::array<uint32_t, 4> keyArray = {key[0], key[1], key[2], key[3]};
+
+	setXTEAKey(keyArray);
 
 	if (operatingSystem >= CLIENTOS_OTCLIENT_LINUX) {
 		NetworkMessage opcodeMessage;
@@ -101,7 +105,7 @@ void ProtocolSpectator::onRecvFirstMessage(NetworkMessage& msg)
 	}
 
 	if (version < CLIENT_VERSION_MIN || version > CLIENT_VERSION_MAX) {
-		disconnectSpectator("Only clients with protocol " CLIENT_VERSION_STR " allowed!");
+		disconnectSpectator(std::string("Only clients with protocol ") + CLIENT_VERSION_STR + " allowed!");
 		return;
 	}
 
